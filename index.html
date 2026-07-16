@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>じかんわり — 学校時間割アプリ</title>
+<meta name="description" content="ドラッグ&ドロップで組む学校の時間割。授業10分前に持ち物を通知します。">
+<meta name="theme-color" content="#1F2A44">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===== Header ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="10" x2="10" y2="21" stroke="currentColor" stroke-width="1.6"/></svg>
+      </span>
+      <div class="brand-text">
+        <h1>じかんわり</h1>
+        <p class="brand-sub">school timetable</p>
+      </div>
+    </div>
+
+    <div class="view-toggle" role="tablist" aria-label="表示切替">
+      <button class="toggle-btn is-active" id="viewWeekBtn" role="tab" aria-selected="true">週表示</button>
+      <button class="toggle-btn" id="viewMonthBtn" role="tab" aria-selected="false">月表示</button>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="icon-btn" id="notifyBtn" title="通知を有効にする">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3a5 5 0 0 0-5 5v3.2c0 .7-.28 1.37-.78 1.87L5 14.4V16h14v-1.6l-1.22-1.33A2.65 2.65 0 0 1 17 11.2V8a5 5 0 0 0-5-5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 19a2.5 2.5 0 0 0 5 0" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span id="notifyLabel">通知オフ</span>
+      </button>
+      <button class="icon-btn ghost" id="presetPackSelectBtn" title="教科プリセットを選ぶ">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        専攻を選ぶ
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- ===== Sidebar: subject preset cards ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h2>教科カード</h2>
+        <select id="trackSelect" aria-label="専攻プリセット"></select>
+      </div>
+      <p class="sidebar-hint">カードを時間割にドラッグして登録できます</p>
+      <div class="preset-list" id="presetList"></div>
+
+      <div class="sidebar-foot">
+        <button class="text-btn" id="addCustomSubjectBtn">＋ 教科を自作する</button>
+      </div>
+    </aside>
+
+    <!-- ===== Main content ===== -->
+    <main class="main">
+
+      <!-- Week view -->
+      <section class="view view-week is-active" id="weekView">
+        <div class="week-nav">
+          <button class="nav-btn" id="prevWeekBtn" aria-label="前の週">‹</button>
+          <h2 id="weekLabel">今週の時間割</h2>
+          <button class="nav-btn" id="nextWeekBtn" aria-label="次の週">›</button>
+          <button class="text-btn today-btn" id="todayWeekBtn">今週へ</button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="timetable" id="timetable">
+            <thead>
+              <tr id="timetableHeadRow"></tr>
+            </thead>
+            <tbody id="timetableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Month view -->
+      <section class="view view-month" id="monthView">
+        <div class="week-nav">
+          <button class="nav-btn" id="prevMonthBtn" aria-label="前の月">‹</button>
+          <h2 id="monthLabel">今月</h2>
+          <button class="nav-btn" id="nextMonthBtn" aria-label="次の月">›</button>
+          <button class="text-btn today-btn" id="todayMonthBtn">今月へ</button>
+        </div>
+        <div class="month-grid-head">
+          <span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="wk">土</span><span class="wk">日</span>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== Modal: day detail (month view) ===== -->
+<dialog class="modal" id="dayModal">
+  <form method="dialog" class="modal-card">
+    <div class="modal-head">
+      <h3 id="dayModalTitle">日付</h3>
+      <button class="icon-btn ghost" value="close" aria-label="閉じる">✕</button>
+    </div>
+    <div id="dayModalBody" class="modal-body"></div>
+  </form>
+</dialog>
+
+<!-- ===== Modal: cell / subject edit ===== -->
+<dialog class="modal" id="cellModal">
+  <form method="dialog" class="modal-card" id="cellModalForm">
+    <div class="modal-head">
+      <h3 id="cellModalTitle">授業を編集</h3>
+      <button class="icon-btn ghost" value="close" aria-label="閉じる">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span>教科名</span>
+        <input type="text" id="cellSubjectName" required>
+      </label>
+      <label class="field">
+        <span>教室・場所（任意）</span>
+        <input type="text" id="cellRoom" placeholder="例：2-A教室">
+      </label>
+      <label class="field">
+        <span>持ち物（1行に1つ）</span>
+        <textarea id="cellItems" rows="4" placeholder="例：教科書&#10;ノート&#10;ジャージ"></textarea>
+      </label>
+      <label class="field">
+        <span>カードの色</span>
+        <div class="color-row" id="cellColorRow"></div>
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="danger-btn" id="cellDeleteBtn">この授業を削除</button>
+      <button type="submit" class="primary-btn" id="cellSaveBtn">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
