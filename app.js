@@ -43,7 +43,7 @@ const BASE_SUBJECTS = [
   { name: "数学C", icon: "📊", color: "#CFE0F3", items: [] },
   { name: "英語コミュニケーション", icon: "🔤", color: "#E3D3EE", items: [] },
   { name: "英語演習", icon: "📗", color: "#E3D3EE", items: [] },
-  { name: "地学基礎", icon: "⛰️", color: "#C9E4DE", items: [] },
+  { name: "理科基礎", icon: "🧪", color: "#C9E4DE", items: [] },
   { name: "生物基礎", icon: "🔬", color: "#C9E4DE", items: [] },
   { name: "論理国語", icon: "📖", color: "#F6C9B4", items: [] },
   { name: "国語表現", icon: "✏️", color: "#F6C9B4", items: [] },
