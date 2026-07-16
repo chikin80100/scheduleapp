@@ -53,8 +53,7 @@ const BASE_SUBJECTS = [
   { name: "体育", icon: "🏃", color: "#F3C6C6", items: [] },
   { name: "美術表現", icon: "🎨", color: "#E8DFC8", items: [] },
   { name: "プロゼミ２", icon: "🧭", color: "#DCE7DF", items: [] },
-  { name: "キャリア探求", icon: "🧭", color: "#F4E1B5", items: [] }、
-  { name: "LHR", icon: "📌", color: "#F4E1B5", items: [] }
+  { name: "キャリア探求", icon: "🧭", color: "#F4E1B5", items: [] }
 ];
 
 const TRACK_PRESETS = {
