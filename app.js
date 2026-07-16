@@ -53,8 +53,7 @@ const BASE_SUBJECTS = [
   { name: "体育", icon: "🏃", color: "#F3C6C6", items: [] },
   { name: "美術表現", icon: "🎨", color: "#E8DFC8", items: [] },
   { name: "プロゼミ２", icon: "🧭", color: "#DCE7DF", items: [] },
-  { name: "キャリア探求", icon: "🧭", color: "#F4E1B5", items: [] },
-  { name: "LHR", icon:"🧭", color: "#F4E1B5", items: [] }
+  { name: "キャリア探求", icon: "🧭", color: "#F4E1B5", items: [] }
 ];
 
 const TRACK_PRESETS = {
@@ -646,6 +645,31 @@ async function toggleNotify() {
   updateNotifyUI();
 }
 
+async function sendTestNotification() {
+  if (!("Notification" in window)) {
+    showToast("このブラウザは通知に対応していません");
+    return;
+  }
+  let perm = Notification.permission;
+  if (perm === "default") {
+    perm = await Notification.requestPermission();
+  }
+  if (perm !== "granted") {
+    showToast("通知が許可されていません。ブラウザの設定を確認してください");
+    return;
+  }
+  try {
+    new Notification("次の授業：テスト教科（10分後）", {
+      body: "持ち物：教科書、ノート、筆記用具\n教室：テスト教室",
+      icon: "icons/icon-192.png",
+      tag: "test-notification"
+    });
+    showToast("テスト通知を送信しました");
+  } catch {
+    showToast("通知の送信に失敗しました");
+  }
+}
+
 function getNotifiedLog() {
   const today = new Date().toDateString();
   const log = store.load(LS_KEYS.notified, { date: today, keys: [] });
@@ -745,6 +769,7 @@ trackSelect.addEventListener("change", () => {
 
 $("#addCustomSubjectBtn").addEventListener("click", addCustomSubject);
 notifyBtn.addEventListener("click", toggleNotify);
+$("#testNotifyBtn").addEventListener("click", sendTestNotification);
 $("#presetPackSelectBtn").addEventListener("click", () => trackSelect.focus());
 
 document.querySelectorAll('.modal [value="close"]').forEach(btn => {
