@@ -59,7 +59,11 @@
         <h2>教科カード</h2>
         <select id="trackSelect" aria-label="専攻プリセット"></select>
       </div>
-      <p class="sidebar-hint">カードを時間割にドラッグして登録できます</p>
+      <p class="sidebar-hint">カードをドラッグ、またはタップして選択→マスをタップで登録できます</p>
+      <div class="placement-banner" id="placementBanner" hidden>
+        <span id="placementBannerText"></span>
+        <button type="button" id="placementCancelBtn">キャンセル</button>
+      </div>
       <div class="preset-list" id="presetList"></div>
 
       <div class="sidebar-foot">

@@ -169,6 +169,8 @@ const notifyBtn = $("#notifyBtn");
 const notifyLabel = $("#notifyLabel");
 
 let selectedColor = COLORS[0];
+let selectedForPlacement = null; // subject object currently selected for tap-to-place
+let suppressNextCardClick = false; // avoids re-toggling selection right after a real drag
 
 /* ============================================================
    Toast
@@ -209,6 +211,7 @@ function renderPresetList() {
     card.className = "preset-card";
     card.style.setProperty("--card-accent", subj.color);
     card.draggable = true;
+    if (subj === selectedForPlacement) card.classList.add("is-selected");
     card.innerHTML = `
       <span class="preset-icon">${subj.icon || "📚"}</span>
       <span class="preset-name">${escapeHtml(subj.name)}</span>
@@ -216,12 +219,41 @@ function renderPresetList() {
     `;
     card.addEventListener("dragstart", (e) => {
       card.classList.add("dragging");
+      suppressNextCardClick = true;
       e.dataTransfer.setData("application/json", JSON.stringify(subj));
       e.dataTransfer.effectAllowed = "copy";
     });
     card.addEventListener("dragend", () => card.classList.remove("dragging"));
+    card.addEventListener("click", () => {
+      if (suppressNextCardClick) { suppressNextCardClick = false; return; }
+      if (selectedForPlacement === subj) {
+        clearPlacementSelection();
+      } else {
+        selectedForPlacement = subj;
+        renderPresetList();
+        updatePlacementBanner();
+      }
+    });
     presetList.appendChild(card);
   });
+  updatePlacementBanner();
+}
+
+function updatePlacementBanner() {
+  const banner = $("#placementBanner");
+  const text = $("#placementBannerText");
+  if (!banner || !text) return;
+  if (selectedForPlacement) {
+    text.textContent = `「${selectedForPlacement.name}」を選択中 — マスをタップして登録`;
+    banner.hidden = false;
+  } else {
+    banner.hidden = true;
+  }
+}
+
+function clearPlacementSelection() {
+  selectedForPlacement = null;
+  renderPresetList();
 }
 
 /* ============================================================
@@ -322,15 +354,39 @@ function renderCellContent(td, key) {
       ${entry.room ? `<span class="cc-room">📍${escapeHtml(entry.room)}</span>` : ""}
       ${(entry.items && entry.items.length) ? `<span class="cc-items">${escapeHtml(entry.items.join(" / "))}</span>` : ""}
     `;
-    card.addEventListener("click", () => openCellModal(key));
+    card.addEventListener("click", () => handleCellTap(key));
     td.appendChild(card);
   } else {
     const slot = document.createElement("div");
     slot.className = "cell-empty-slot";
     slot.textContent = "＋";
-    slot.addEventListener("click", () => openCellModal(key));
+    slot.addEventListener("click", () => handleCellTap(key));
     td.appendChild(slot);
   }
+}
+
+function handleCellTap(key) {
+  if (selectedForPlacement) {
+    const subj = selectedForPlacement;
+    placeSubjectAtKey(key, subj);
+    clearPlacementSelection();
+    showToast(`${subj.name} を登録しました`);
+    return;
+  }
+  openCellModal(key);
+}
+
+function placeSubjectAtKey(key, subj) {
+  state.schedule[key] = {
+    name: subj.name,
+    color: subj.color || COLORS[0],
+    room: state.schedule[key]?.room || "",
+    items: Array.isArray(subj.items) ? [...subj.items] : []
+  };
+  persistSchedule();
+  const td = timetableBody.querySelector(`td[data-key="${key}"]`);
+  if (td) renderCellContent(td, key);
+  renderMonthGrid();
 }
 
 function attachDropHandlers(td, key) {
@@ -343,15 +399,7 @@ function attachDropHandlers(td, key) {
     if (!raw) return;
     try {
       const subj = JSON.parse(raw);
-      state.schedule[key] = {
-        name: subj.name,
-        color: subj.color || COLORS[0],
-        room: state.schedule[key]?.room || "",
-        items: Array.isArray(subj.items) ? [...subj.items] : []
-      };
-      persistSchedule();
-      renderCellContent(td, key);
-      renderMonthGrid();
+      placeSubjectAtKey(key, subj);
       showToast(`${subj.name} を登録しました`);
     } catch {}
   });
@@ -768,6 +816,10 @@ trackSelect.addEventListener("change", () => {
 });
 
 $("#addCustomSubjectBtn").addEventListener("click", addCustomSubject);
+$("#placementCancelBtn").addEventListener("click", clearPlacementSelection);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && selectedForPlacement) clearPlacementSelection();
+});
 notifyBtn.addEventListener("click", toggleNotify);
 $("#testNotifyBtn").addEventListener("click", sendTestNotification);
 $("#presetPackSelectBtn").addEventListener("click", () => trackSelect.focus());
